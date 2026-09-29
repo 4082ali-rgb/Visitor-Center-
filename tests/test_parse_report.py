@@ -85,5 +85,17 @@ class ParseSep04(unittest.TestCase):
         ])
 
 
+class ParseSep05(unittest.TestCase):
+    """5 Sep 2026: MarkItDown emitted the first Revenue Classes row as plain text (JJ3706)."""
+
+    def test_plain_text_row_read(self):
+        day, flags = parse_report.parse((FIX / "sales_2026-09-05.md").read_text(),
+                                        (FIX / "taxes_2026-09-05.md").read_text())
+        self.assertEqual(day["revenue"]["Unclassified"], "947.90")
+        self.assertFalse(any("Total shows" in f for f in flags))
+        _, rows, _ = build_je.build({"journal_no": "JJ3706", **day})
+        self.assertEqual(sum(build_je.cents(r[5], "") for r in rows), 122109)
+
+
 if __name__ == "__main__":
     unittest.main()

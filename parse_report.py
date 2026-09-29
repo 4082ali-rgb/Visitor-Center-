@@ -56,6 +56,13 @@ def tables(text):
             amounts = [money(m) for m in MONEY.findall(s)]
             if amounts:  # rows without amounts are column headers
                 out[current].append((cells[0], amounts))
+        elif current and MONEY.search(s):
+            # MarkItDown sometimes emits a table's first row as plain text,
+            # e.g. "Unclassified 4 $947.90 $0.00 ...". Label is the text
+            # before the (optional item count and) first amount.
+            label = re.split(r"\s+(?:\d+\s+)?-?\$", s, maxsplit=1)[0].strip()
+            if label and not label.startswith("$"):
+                out[current].append((label, [money(m) for m in MONEY.findall(s)]))
     return out
 
 
