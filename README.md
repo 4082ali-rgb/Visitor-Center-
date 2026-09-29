@@ -15,24 +15,22 @@ the Clover reports to Markdown.
 
 ## Usage
 
-1. Convert the Clover Sales Overview PDF to Markdown first:
+Give it the day's two Clover PDFs (Sales Overview and Taxes) and the confirmed
+journal number:
 
-   ```
-   .venv/bin/python convert_report.py SalesOverview.pdf -o reports_md
-   ```
+```
+.venv/bin/python parse_report.py Sales_Sep_01.pdf Taxes_Sep_01.pdf --journal-no JJ3702 --confirmed -o day.json
+.venv/bin/python build_je.py day.json -o out
+```
 
-   Read the day's figures from the `.md` file it writes.
-2. Copy `examples/brand_split.json` and fill in the day's figures from the Clover
-   Sales Overview report (tables named per rules §2). Leave a category out or blank
-   if it had no activity.
-3. Set `journal_no` to the number you've confirmed. The script never makes one up.
-   Set `journal_no_confirmed` to `true` once it's confirmed; otherwise the output
-   flags it as proposed.
-4. Run:
+`parse_report.py` runs each PDF through MarkItDown, pulls the figures from the
+Markdown (tables per rules §2) and writes the day's JSON. It stops if a table it
+needs is missing or laid out differently from what it expects, and flags any
+table whose Total row doesn't match its lines. Leave out `--confirmed` if the
+journal number is only proposed. It never makes up a journal number.
 
-   ```
-   python3 build_je.py day.json [more.json ...] -o out
-   ```
+To keep a readable copy of a report, `convert_report.py REPORT.pdf -o reports_md`
+writes the Markdown on its own. You can also hand-write the JSON; see `examples/`.
 
 For each day it writes `out/{JournalNo}_VisitorCentre_{DMonYYYY}.csv` and prints
 the flags list (rules §9). An unbalanced entry or an unmapped revenue category
@@ -44,5 +42,5 @@ total to have any cent difference from Tax details flagged.
 ## Tests
 
 ```
-python3 -m unittest discover -s tests   # or .venv/bin/python to include the converter tests
+.venv/bin/python -m unittest discover -s tests
 ```
