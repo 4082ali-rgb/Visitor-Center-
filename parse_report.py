@@ -17,6 +17,8 @@ from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
+from build_je import REVENUE_MAP
+
 MONEY = re.compile(r"-?\$[\d,]+\.\d{2}")
 SECTIONS = ["Sales", "Tender Types", "Revenue Classes", "Sales By Card Type",
             "Cash Deposits", "Cash Adjustments", "Tax details"]
@@ -55,6 +57,15 @@ def tables(text):
             if amounts:  # rows without amounts are column headers
                 out[current].append((cells[0], amounts))
     return out
+
+
+def expand(label, known):
+    """Resolve a label Clover cut short with '…' to the one known name it starts."""
+    if not label.endswith("…"):
+        return label
+    stem = label[:-1].rstrip()
+    matches = [k for k in known if k.startswith(stem)]
+    return matches[0] if len(matches) == 1 else label  # unresolved -> build_je blocks it
 
 
 def rows(t, section):
@@ -104,7 +115,13 @@ def parse(sales_text, tax_text):
         if len(a) != 6:
             raise ParseError(f"Revenue Classes row {k!r}: expected 6 amounts, got {a}")
     check_total("Revenue Classes", rc, lambda a: a[3], flags)
-    revenue = {k: a[3] for k, a in rc.items() if k != "Total"}
+    revenue = {}
+    for k, a in rc.items():
+        if k != "Total":
+            name = expand(k, REVENUE_MAP)
+            if name != k:
+                flags.append(f"Revenue class {k!r} read as {name!r} (Clover truncated the label)")
+            revenue[name] = a[3]
     rc_tax = rc["Total"][4] if "Total" in rc else None
 
     cash = ""

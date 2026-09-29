@@ -43,5 +43,30 @@ class ParseSep01(unittest.TestCase):
             parse_report.parse(sales, (FIX / "taxes_2026-09-01.md").read_text())
 
 
+class ParseSep02(unittest.TestCase):
+    """2 Sep 2026 reports: truncated 'Non-Alcoho…' label, card test fails (JJ3703)."""
+
+    def setUp(self):
+        sales = (FIX / "sales_2026-09-02.md").read_text()
+        taxes = (FIX / "taxes_2026-09-02.md").read_text()
+        self.day, self.flags = parse_report.parse(sales, taxes)
+
+    def test_truncated_label_resolved(self):
+        self.assertEqual(self.day["revenue"]["Non-Alcoholic"], "21.75")
+        self.assertTrue(any("truncated" in f for f in self.flags))
+
+    def test_end_to_end_fallback(self):
+        _, rows, flags = build_je.build({"journal_no": "JJ3703", **self.day})
+        self.assertEqual([(r[3].split()[0], r[4] or r[5]) for r in rows], [
+            ("1007", "32.60"), ("1007", "13.72"), ("1002", "90.75"),
+            ("3014", "41.60"), ("3018", "38.35"), ("3006", "21.75"), ("3010", "25.75"),
+            ("2029", "5.99"), ("2035", "3.63"),
+        ])
+        self.assertTrue(any("grand totals match but splits differ" in f for f in flags))
+
+    def test_ambiguous_truncation_left_for_build_to_block(self):
+        self.assertEqual(parse_report.expand("No…", {"Non-Alcoholic": 1, "Novelty": 1}), "No…")
+
+
 if __name__ == "__main__":
     unittest.main()
