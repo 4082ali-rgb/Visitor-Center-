@@ -47,6 +47,7 @@ The Clover report has several tables that don't always agree. Use these:
 | Snacks | `3014 Revenue - Snacks` | 0051-VISITOR CENTER |
 | Gifts | `3018 Revenue - Souvenir` | 0051-VISITOR CENTER |
 | Non-Alcoholic | `3006 Revenue - Non-Alcoholic` | 0051-VISITOR CENTER |
+| Firewood | `3008 Wood Sales` | 0051-VISITOR CENTER |
 | Unclassified | `3010 Visitor Centre Retail` | 0051-VISITOR CENTER |
 | Parks Fees | `3001 Revenue` | **0050-MANNING PARKS** |
 
@@ -60,6 +61,8 @@ The Clover report has several tables that don't always agree. Use these:
 |---|---|---|
 | GST (5%) | `2029 GST Charged on Sales` | 0051-VISITOR CENTER |
 | PST (7%) | `2035 PST 7% Charged on Sales` | 0051-VISITOR CENTER |
+
+Firewood was first seen 4 Sep 2026 (JJ3705) and mapped to `3008 Wood Sales`, not `3019 Revenue - Firewood - Country Store`, since it's sold at the Visitor Centre. Its Description is the plain memo.
 
 **Default class is `0051-VISITOR CENTER` on every line.** The single exception is the Parks Fees line, which goes to `0050-MANNING PARKS` — it's a park fee collected at the Visitor Centre, not Visitor Centre retail revenue.
 

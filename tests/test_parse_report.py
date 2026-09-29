@@ -69,5 +69,21 @@ class ParseSep02(unittest.TestCase):
         self.assertEqual(parse_report.expand("No…", {"Non-Alcoholic": 1, "Novelty": 1}), "No…")
 
 
+class ParseSep04(unittest.TestCase):
+    """4 Sep 2026 reports: Firewood and Parks Fees (JJ3705)."""
+
+    def test_end_to_end(self):
+        day, _ = parse_report.parse((FIX / "sales_2026-09-04.md").read_text(),
+                                    (FIX / "taxes_2026-09-04.md").read_text())
+        _, rows, _ = build_je.build({"journal_no": "JJ3705", **day})
+        self.assertEqual([(r[3].split()[0], r[4] or r[5], r[9]) for r in rows], [
+            ("1007", "124.36", build_je.VC), ("1007", "7.84", build_je.VC), ("1007", "3.10", build_je.VC),
+            ("1002", "29.34", build_je.VC),
+            ("3014", "5.95", build_je.VC), ("3018", "68.10", build_je.VC), ("3006", "7.00", build_je.VC),
+            ("3008", "38.10", build_je.VC), ("3010", "14.20", build_je.VC), ("3001", "21.90", build_je.PARKS),
+            ("2029", "7.07", build_je.VC), ("2035", "2.32", build_je.VC),
+        ])
+
+
 if __name__ == "__main__":
     unittest.main()

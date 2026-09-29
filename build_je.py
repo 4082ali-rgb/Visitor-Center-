@@ -28,6 +28,7 @@ REVENUE_MAP = {
     "Snacks": ("3014 Revenue - Snacks", VC, None),
     "Gifts": ("3018 Revenue - Souvenir", VC, None),
     "Non-Alcoholic": ("3006 Revenue - Non-Alcoholic", VC, None),
+    "Firewood": ("3008 Wood Sales", VC, None),
     "Unclassified": ("3010 Visitor Centre Retail", VC, "Unclassified"),
     "Parks Fees": ("3001 Revenue", PARKS, "Park Fee"),
 }
