@@ -16,7 +16,8 @@ the Clover reports to Markdown.
 ## Usage
 
 Give it the day's two Clover PDFs (Sales Overview and Taxes) and the confirmed
-journal number:
+journal number. The Taxes report can be left out on a day with no tax at all; the
+script checks the Sales Overview shows $0.00 Taxes & Fees and stops otherwise.
 
 ```
 .venv/bin/python parse_report.py Sales_Sep_01.pdf Taxes_Sep_01.pdf --journal-no JJ3702 --confirmed -o day.json

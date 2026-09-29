@@ -6,7 +6,10 @@ Takes the Sales Overview and Taxes reports for one day, either as PDFs
 convert_report.py. Report type is detected from content, so order is free.
 
 Usage:
-    python3 parse_report.py SALES TAXES --journal-no JJ3702 [--confirmed] [-o day.json]
+    python3 parse_report.py SALES [TAXES] --journal-no JJ3702 [--confirmed] [-o day.json]
+
+The Taxes report may be omitted only on a day the Sales Overview shows
+$0.00 Taxes & Fees.
 """
 
 import argparse
@@ -21,7 +24,7 @@ from build_je import REVENUE_MAP
 
 MONEY = re.compile(r"-?\$[\d,]+\.\d{2}")
 SECTIONS = ["Sales", "Tender Types", "Revenue Classes", "Sales By Card Type",
-            "Cash Deposits", "Cash Adjustments", "Tax details"]
+            "Cash Deposits", "Cash Deposit", "Cash Adjustments", "Tax details"]
 
 
 class ParseError(Exception):
@@ -91,14 +94,14 @@ def check_total(section, table, pick, flags):
         flags.append(f"{section}: lines sum to {parts} but Total shows {total}")
 
 
-def parse(sales_text, tax_text):
+def parse(sales_text, tax_text=None):
     flags = []
     m = re.search(r"([A-Z][a-z]{2}) (\d{1,2}), (\d{4})", sales_text)
     if not m:
         raise ParseError("report date not found in Sales Overview")
     day = datetime.strptime(" ".join(m.groups()), "%b %d %Y").date()
 
-    st, tt = tables(sales_text), tables(tax_text)
+    st = tables(sales_text)
 
     sales = rows(st, "Sales")
     if "Amount Collected" not in sales or not sales["Amount Collected"]:
@@ -141,10 +144,17 @@ def parse(sales_text, tax_text):
 
     # Tax details amounts: Applicable sales, Taxes collected, Taxes refunded, Net taxes
     tax = {}
-    for k, a in rows(tt, "Tax details").items():
-        name = k.split()[0]
-        if name in ("GST", "PST") and a:
-            tax[name] = a[-1]
+    if tax_text is None:
+        taxes_fees = (sales.get("Taxes & Fees") or ["0.00"])[-1]
+        if Decimal(taxes_fees) != 0 or (rc_tax and Decimal(rc_tax) != 0):
+            raise ParseError(f"no Taxes report, but Sales shows Taxes & Fees {taxes_fees}; "
+                             "the Taxes report is needed for the GST/PST split")
+        flags.append("No Taxes report; Sales shows $0.00 tax, so no GST/PST lines")
+    else:
+        for k, a in rows(tables(tax_text), "Tax details").items():
+            name = k.split()[0]
+            if name in ("GST", "PST") and a:
+                tax[name] = a[-1]
 
     return {
         "date": day.isoformat(),
@@ -160,7 +170,8 @@ def parse(sales_text, tax_text):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("reports", nargs=2, type=Path, help="Sales Overview and Taxes reports (PDF or .md)")
+    ap.add_argument("reports", nargs="+", type=Path,
+                    help="Sales Overview and (unless the day had no tax) Taxes report, PDF or .md")
     ap.add_argument("--journal-no", required=True, help="confirmed journal number, e.g. JJ3702")
     ap.add_argument("--confirmed", action="store_true", help="journal number is confirmed")
     ap.add_argument("-o", "--out", type=Path, help="write JSON here (default: stdout)")
@@ -169,11 +180,11 @@ def main(argv=None):
     texts = [load_text(p) for p in args.reports]
     sales = [t for t in texts if "Sales Overview" in t]
     taxes = [t for t in texts if "Taxes Report" in t or "Tax details" in t]
-    if len(sales) != 1 or len(taxes) != 1:
-        print("BLOCKED: need exactly one Sales Overview and one Taxes report")
+    if len(texts) > 2 or len(sales) != 1 or len(taxes) > 1:
+        print("BLOCKED: need one Sales Overview and at most one Taxes report")
         return 1
     try:
-        day, flags = parse(sales[0], taxes[0])
+        day, flags = parse(sales[0], taxes[0] if taxes else None)
     except ParseError as e:
         print(f"BLOCKED: {e}")
         return 1

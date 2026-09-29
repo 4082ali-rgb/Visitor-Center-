@@ -97,5 +97,21 @@ class ParseSep05(unittest.TestCase):
         self.assertEqual(sum(build_je.cents(r[5], "") for r in rows), 122109)
 
 
+class ParseSep16NoTaxes(unittest.TestCase):
+    """16 Sep 2026: one untaxed sale, no Taxes report supplied (JJ3709)."""
+
+    def test_no_taxes_report_on_zero_tax_day(self):
+        day, flags = parse_report.parse((FIX / "sales_2026-09-16.md").read_text())
+        self.assertEqual(day["tax"], {})
+        self.assertTrue(any("No Taxes report" in f for f in flags))
+        _, rows, _ = build_je.build({"journal_no": "JJ3709", **day})
+        self.assertEqual([(r[3].split()[0], r[4] or r[5]) for r in rows],
+                         [("1007", "775.00"), ("3010", "775.00")])
+
+    def test_missing_taxes_report_blocks_when_tax_charged(self):
+        with self.assertRaisesRegex(parse_report.ParseError, "Taxes report is needed"):
+            parse_report.parse((FIX / "sales_2026-09-01.md").read_text())
+
+
 if __name__ == "__main__":
     unittest.main()
