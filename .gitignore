@@ -1,2 +1,4 @@
 out/
 __pycache__/
+.venv/
+reports_md/

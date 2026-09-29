@@ -22,6 +22,8 @@ Both sides must equal **Amount Collected** from the Sales Overview.
 
 ## 2. Source data — which table to read
 
+**Convert the report first.** Run every Clover Sales Overview PDF through MarkItDown (`convert_report.py`) and read the figures from the Markdown it produces.
+
 The Clover report has several tables that don't always agree. Use these:
 
 | What you need | Read it from | Not from |
