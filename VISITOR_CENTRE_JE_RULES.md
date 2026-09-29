@@ -77,23 +77,20 @@ Written out in full — `Visitor Centre Daily Revenue 31 August 2026`, not `31/0
 
 | Line | Description |
 |---|---|
-| 1007, when **more than one** 1007 line exists | `Visa - {memo}` / `MasterCard - {memo}` / `Debit - {memo}` / `Credit - {memo}` |
-| 1007, when it's the **only** 1007 line | **see note below — was applied inconsistently** |
+| 1007 (every card line, **including when it's the only one**) | `Visa - {memo}` / `MasterCard - {memo}` / `Debit - {memo}` / `Credit - {memo}` |
 | 3010 Visitor Centre Retail | `Unclassified - {memo}` |
 | 3001 Revenue (Parks Fees) | `Park Fee - {memo}` |
 | everything else | plain memo |
 
-**Unresolved — the single-1007 case was handled two different ways.** Three entries had only one 1007 line:
+**Card lines always carry the tender label**, even when there's only one 1007 line — the Description then tells you the tender type without opening the source report.
 
-| Entry | Date | Tender | Description written |
-|---|---|---|---|
-| JJ3298 | 11 Aug | Interac only | `Debit - Visitor Centre Daily Revenue 11 August 2026` |
-| JJ3305 | 18 Aug | Interac only | `Debit - Visitor Centre Daily Revenue 18 August 2026` |
-| JJ3306 | 19 Aug | MasterCard only | `Visitor Centre Daily Revenue 19 August 2026` |
+This was applied inconsistently before the rule was settled:
 
-On 19 Aug the prefix was stripped on the reasoning that prefixes exist to disambiguate lines sharing an account, and with one line there's nothing to disambiguate. That reasoning was not applied back to 11 and 18 Aug, which were already delivered.
-
-**Decide which you want and make it the rule.** Keeping the tender prefix always is arguably more useful — the Description then tells you the tender type without opening the source report. Dropping it on single lines is more internally consistent with the disambiguation logic. Either is defensible; the current state is neither.
+| Entry | Date | Tender | Description written | Status |
+|---|---|---|---|---|
+| JJ3298 | 11 Aug | Interac only | `Debit - Visitor Centre Daily Revenue 11 August 2026` | matches rule |
+| JJ3305 | 18 Aug | Interac only | `Debit - Visitor Centre Daily Revenue 18 August 2026` | matches rule |
+| JJ3306 | 19 Aug | MasterCard only | `Visitor Centre Daily Revenue 19 August 2026` | **needs `MasterCard -` prefix** |
 
 Prefix format is `Label - memo` (space, dash, space). **No commas anywhere in Description.**
 
@@ -128,8 +125,8 @@ Columns, exact order:
 *JournalNo,*JournalDate,Memo,*AccountName,Debits,Credits,Description,Name,Location,Class
 ```
 
-- `*JournalNo` repeats on **every** row.
-- `*JournalDate` and `Memo` on the **first row only**, blank thereafter.
+- `*JournalNo`, `*JournalDate` and `Memo` repeat on **every** row.
+- Line endings are **CRLF** (`\r\n`).
 - Date format `DD-MM-YYYY` (e.g. `31-08-2026`).
 - Amounts: two decimals, no `$`, no thousands separators.
 - Each row has a value in `Debits` **or** `Credits`, never both.
@@ -138,12 +135,11 @@ Columns, exact order:
 
 Filename: `{JournalNo}_VisitorCentre_{DMonYYYY}.csv` — e.g. `JJ3439_VisitorCentre_31Aug2026.csv`.
 
-### Two deviations from the project-wide convention
+### Change from the delivered files
 
-These are what the 39 delivered files actually do. Both differ from the general rules recorded for other outlets:
+This matches the project-wide convention used for the other outlets. The 39 files delivered for 24 Jul – 31 Aug differed from it in two ways: JournalDate and Memo appeared on row 1 only, and line endings were LF. Those files are not being reissued; the only import failure seen (JJ2938) was a balance error, not a format error. All new files use the format above.
 
-| Project-wide rule | What the VC files do |
-|---|---|
+---|---|
 | JournalNo, JournalDate and Memo repeat on **every** row | JournalNo on every row; **JournalDate and Memo on row 1 only** |
 | Line endings must be **CRLF** (`\r\n`) | All 39 files were written with **LF** endings |
 

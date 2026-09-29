@@ -1,0 +1,18 @@
+{
+  "journal_no": "JJ3500",
+  "journal_no_confirmed": false,
+  "date": "2026-09-01",
+  "amount_collected": "250.00",
+  "revenue": {
+    "Snacks": "100.00",
+    "Gifts": "80.00",
+    "Non-Alcoholic": "20.00",
+    "Unclassified": "",
+    "Parks Fees": "25.00"
+  },
+  "tax": {"GST": "15.00", "PST": "10.00"},
+  "revenue_classes_tax_total": "24.99",
+  "tender_types": {"Debit Card": "90.00", "Credit Card": "140.00"},
+  "card_types": {"Interac": "90.00", "Visa": "100.00", "MasterCard": "40.00"},
+  "cash": "20.00"
+}
