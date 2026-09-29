@@ -44,7 +44,7 @@ class ParseSep01(unittest.TestCase):
 
 
 class ParseSep02(unittest.TestCase):
-    """2 Sep 2026 reports: truncated 'Non-Alcoho…' label, card test fails (JJ3703)."""
+    """2 Sep 2026 reports: truncated 'Non-Alcoho…' label, card totals match but splits differ (JJ3703)."""
 
     def setUp(self):
         sales = (FIX / "sales_2026-09-02.md").read_text()
@@ -55,14 +55,15 @@ class ParseSep02(unittest.TestCase):
         self.assertEqual(self.day["revenue"]["Non-Alcoholic"], "21.75")
         self.assertTrue(any("truncated" in f for f in self.flags))
 
-    def test_end_to_end_fallback(self):
+    def test_end_to_end_brand_split(self):
+        # Matches the corrected entry posted in QBO for 2 Sep.
         _, rows, flags = build_je.build({"journal_no": "JJ3703", **self.day})
         self.assertEqual([(r[3].split()[0], r[4] or r[5]) for r in rows], [
-            ("1007", "32.60"), ("1007", "13.72"), ("1002", "90.75"),
+            ("1007", "13.72"), ("1007", "15.70"), ("1007", "16.90"), ("1002", "90.75"),
             ("3014", "41.60"), ("3018", "38.35"), ("3006", "21.75"), ("3010", "25.75"),
             ("2029", "5.99"), ("2035", "3.63"),
         ])
-        self.assertTrue(any("grand totals match but splits differ" in f for f in flags))
+        self.assertTrue(any("split differs and is not used" in f for f in flags))
 
     def test_ambiguous_truncation_left_for_build_to_block(self):
         self.assertEqual(parse_report.expand("No…", {"Non-Alcoholic": 1, "Novelty": 1}), "No…")

@@ -62,7 +62,7 @@ def fmt(c):
 
 
 def card_lines(day, flags):
-    """Apply the §5 reconciliation test. Returns [(label, cents)]."""
+    """Apply the §5 card split rule. Returns [(label, cents)]."""
     tt = {k: cents(v, f"tender_types.{k}") for k, v in day.get("tender_types", {}).items()}
     ct = {k: cents(v, f"card_types.{k}") for k, v in day.get("card_types", {}).items()}
     for k in tt:
@@ -77,16 +77,15 @@ def card_lines(day, flags):
     if other_brands:
         figures += "; other brands " + ", ".join(f"{b} {fmt(ct[b])}" for b in other_brands)
 
-    if not other_brands and interac == debit and visa + mc == credit:
-        flags.append(f"Card path: brand split (test passed). {figures}")
+    if not other_brands and interac + visa + mc == debit + credit:
+        if interac == debit and visa + mc == credit:
+            flags.append(f"Card path: brand split (splits match). {figures}")
+        else:
+            flags.append(f"Card path: brand split (card totals match; Tender Types "
+                         f"debit/credit split differs and is not used). {figures}")
         lines = [("Visa", visa), ("MasterCard", mc), ("Debit", interac)]
     else:
-        if other_brands:
-            why = "unmapped card brand present"
-        elif interac + visa + mc == debit + credit:
-            why = "grand totals match but splits differ"
-        else:
-            why = "splits differ"
+        why = "unmapped card brand present" if other_brands else "card totals differ"
         flags.append(f"Card path: Tender Types fallback ({why}). {figures}")
         lines = [("Debit", debit), ("Credit", credit)]
     return [(label, amt) for label, amt in lines if amt]

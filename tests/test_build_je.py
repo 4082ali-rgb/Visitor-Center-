@@ -29,19 +29,27 @@ class BuildTests(unittest.TestCase):
         self.assertTrue(any("used Tax details" in f for f in flags))
 
     def test_fallback_uses_tender_types_only(self):
-        # JJ2938 shape: mixing Debit from Tender Types with Visa/MC from card
-        # types would not balance. The fallback must use Tender Types only.
+        # JJ2938 shape: card totals differ, and mixing Debit from Tender Types
+        # with Visa/MC from card types would not balance. Use Tender Types only.
         fn, rows, flags = build_je.build(load("fallback.json"))
         card = [(r[6].split(" - ")[0], r[4]) for r in rows if r[3] == build_je.CARD_ACCOUNT]
         self.assertEqual(card, [("Debit", "189.45"), ("Credit", "153.11")])
         self.assertTrue(any("fallback" in f for f in flags))
         self.assertFalse(any(r[3] == "3001 Revenue" for r in rows))
 
-    def test_grand_totals_match_but_splits_differ(self):
+    def test_grand_totals_match_but_splits_differ_uses_brands(self):
         day = load("brand_split.json")
         day["card_types"] = {"Interac": "80.00", "Visa": "110.00", "MasterCard": "40.00"}
         _, rows, flags = build_je.build(day)
-        self.assertTrue(any("grand totals match" in f for f in flags))
+        card = [(r[6].split(" - ")[0], r[4]) for r in rows if r[3] == build_je.CARD_ACCOUNT]
+        self.assertEqual(card, [("Visa", "110.00"), ("MasterCard", "40.00"), ("Debit", "80.00")])
+        self.assertTrue(any("split differs and is not used" in f for f in flags))
+
+    def test_other_brand_falls_back(self):
+        day = load("brand_split.json")
+        day["card_types"] = {"Interac": "90.00", "Visa": "100.00", "Amex": "40.00"}
+        _, rows, flags = build_je.build(day)
+        self.assertTrue(any("unmapped card brand" in f for f in flags))
         self.assertEqual(sum(1 for r in rows if r[3] == build_je.CARD_ACCOUNT), 2)
 
     def test_single_card_line_keeps_prefix(self):

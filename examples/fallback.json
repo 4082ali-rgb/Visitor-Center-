@@ -11,6 +11,6 @@
   },
   "tax": {"GST": "30.00", "PST": "4.44"},
   "tender_types": {"Debit Card": "189.45", "Credit Card": "153.11"},
-  "card_types": {"Interac": "195.94", "Visa": "105.33", "MasterCard": "41.29"},
+  "card_types": {"Interac": "180.00", "Visa": "105.33", "MasterCard": "41.29"},
   "cash": "50.00"
 }

@@ -100,23 +100,24 @@ Prefix format is `Label - memo` (space, dash, space). **No commas anywhere in De
 
 ## 5. Card tender split — the reconciliation test
 
-This is the rule that changes most often day to day. Run the test before writing any card lines.
+Run the test before writing any card lines.
 
-**Test:**
+**Test — compare the card grand totals:**
 ```
-Interac                    ==  Debit Card      (Tender Types)
-Visa + MasterCard          ==  Credit Card     (Tender Types)
+Interac + Visa + MasterCard   (Sales By Card Type)
+    ==
+Debit Card + Credit Card      (Tender Types)
 ```
 
-**If both match exactly → split by card brand.** Separate 1007 lines with `Visa -`, `MasterCard -`, `Debit -` prefixes.
+**If the totals match → split by card brand from Sales By Card Type.** Separate 1007 lines: `Visa -`, `MasterCard -`, and `Debit -` for Interac. This applies **even when the Tender Types debit/credit split differs** from the brand split. Clover's Tender Types counts some brand cards (e.g. a MasterCard debit card) as "Debit Card", so the two tables often split differently while agreeing on the total. The brand table is the one used.
 
-**If either side doesn't match → fall back to Tender Types only.** Two 1007 lines: `Debit -` for Debit Card, `Credit -` for Credit Card. Do not split the credit side by brand.
+*Example, 2 Sep 2026 (JJ3703):* Tender Types Debit $32.60 / Credit $13.72; Sales By Card Type Interac $16.90 / MasterCard $15.70 / Visa $13.72. Both total $46.32 → lines are Debit $16.90, MasterCard $15.70, Visa $13.72.
 
-Never mix sources — don't take Debit from Tender Types and Visa/MasterCard from Sales By Card Type. That's what broke JJ2938 (26 Aug): Debit came from Tender Types ($189.45) while Visa and MasterCard came from the card-type table ($105.33 + $41.29), double-counting part of the card sales. Debits summed to $399.23 against $392.56 credits and QBO rejected the import.
+**If the totals don't match → fall back to Tender Types only.** Two 1007 lines: `Debit -` for Debit Card, `Credit -` for Credit Card. Do not split by brand. Also fall back if Sales By Card Type shows a brand other than Interac, Visa or MasterCard.
 
-**Note the grand totals can match while the individual splits don't.** On 8 Aug, 24 Aug and 31 Aug both tables totalled the same figure but the debit/credit split differed between them — that's still a failed test, use the fallback.
+Never mix sources — all card lines come from one table. Don't take Debit from Tender Types and Visa/MasterCard from Sales By Card Type. That's what broke JJ2938 (26 Aug): Debit came from Tender Types ($189.45) while Visa and MasterCard came from the card-type table ($105.33 + $41.29), double-counting part of the card sales. Debits summed to $399.23 against $392.56 credits and QBO rejected the import.
 
-Frequency over the period: the test failed on 26, 29 Jul and 3, 4, 5, 7, 8, 9, 16, 24, 26, 31 Aug. It's a normal branch, not an error condition.
+**Rule change, 2 Sep 2026:** before this date, a matching grand total with a differing debit/credit split was treated as a failed test and used the fallback. That applied on 8, 24 and 31 Aug, which were delivered with Tender Types lines. The rule above supersedes it.
 
 ---
 
