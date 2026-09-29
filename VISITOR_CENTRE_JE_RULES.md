@@ -199,6 +199,6 @@ Proceed with a best guess and flag it — don't block. The exceptions that *do* 
 
 ---
 
-## 10. Open item
+## 10. Settled items
 
-**"Gifts" → 3018 Revenue - Souvenir** was flagged for confirmation on 24 Jul and used consistently since, but never explicitly confirmed. The Clover category reads "Gifts"; the QBO account reads "Souvenir". Worth confirming with Beverly or checking a QBO export before treating this as settled.
+**"Gifts" → 3018 Revenue - Souvenir** — confirmed 29 Sep 2026. The Clover category reads "Gifts"; the QBO account reads "Souvenir". Used since 24 Jul; no longer flagged.

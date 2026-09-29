@@ -124,8 +124,6 @@ def build(day):
         amt = cents(revenue.get(cat), f"revenue.{cat}")
         if amt:
             credits.append((acct, amt, f"{label} - {memo}" if label else memo, cls))
-            if cat == "Gifts":
-                flags.append("Gifts -> 3018 Revenue - Souvenir mapping still unconfirmed (rules §10).")
         else:
             flags.append(f"No {cat}: {acct.split()[0]} line omitted.")
 
